@@ -1,0 +1,190 @@
+package jxl;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+class WorkTable extends JFrame implements Observer {
+
+	private JScrollPane js;
+	private JTable dataTable[];
+
+	WorkTable(String frameName) {
+		
+		super(frameName);
+		int i,j,k,s;
+		int fileNum;
+		Object[][] rowData;
+		DefaultTableModel tableModel[];
+		setSize((int) (ConfigClass.wndWidth), (int) (ConfigClass.wndHeigth));
+		setLocation((int) (ConfigClass.wndX), (int) (ConfigClass.wndY));
+		
+		Container topPanel = getContentPane();
+		
+		fileNum = ConfigClass.excelList.split(";").length;
+		dataTable = new JTable[fileNum];
+		String colName[][] = new String[fileNum][ConfigClass.readColNum];
+		String tmpName[] = ConfigClass.columnName.split(";");
+		for(i = 0,k=0;i < fileNum;i++)
+		{
+			for(j = 0;j < ConfigClass.readColNum;j++)
+			{
+				colName[i][j] = tmpName[k];
+				k++;
+			}
+		}
+ 		for(i = 0;i < fileNum;i++)
+		{
+			dataTable[i] = new JTable(new Object[1][ConfigClass.readColNum],colName[i]);
+		}
+		
+ 		
+ 		TableRenderer tr = new TableRenderer();
+ 		JTable factoryNameTable = null;
+  		tmpName = ConfigClass.factoryName.split(";");
+ 		factoryNameTable = new JTable(new Object[1][fileNum],tmpName);
+ 		for(i = 0;i < fileNum;i++)
+		{
+ 			factoryNameTable.getColumn(tmpName[i]).setCellRenderer(tr);
+ 		}
+ 		
+ 		tmpName = new String[1];
+ 		tmpName[0] = ConfigClass.titleName;
+ 		JTable titleTable = new JTable(new Object[1][1],tmpName);
+ 		titleTable.getColumn(tmpName[0]).setCellRenderer(tr);
+ 		
+
+ 		titleTable.setValueAt(new JScrollPane(factoryNameTable,
+				JScrollPane.VERTICAL_SCROLLBAR_NEVER,
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER), 0,0);
+ 		
+// 		for(i = 0;i < fileNum;i++)
+//		{
+// 			factoryNameTable.setValueAt(new JScrollPane(dataTable[i],
+// 					JScrollPane.VERTICAL_SCROLLBAR_NEVER,
+// 					ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER), 0,i);
+// 		}
+ 		
+// 		factoryNameTable.setValueAt(dataTable[0],0,0);
+// 		dataTable[0].setValueAt("sdsf", 0, 1);
+ 	//	factoryNameTable.setValueAt(dataTable[1],0,1);
+ 		//		JButton titleButton = new JButton(ConfigClass.titleButtonName);
+//		JPanel juniorPanel = new JPanel(new BorderLayout());
+//		JPanel factoryPanel = new JPanel(new GridLayout(1, 2));
+//		JButton factoryButton1 = new JButton(ConfigClass.factoryButton1Name);
+//		JButton factoryButton2 = new JButton(ConfigClass.factoryButton2Name);
+//		
+		 
+//		rowData = new Object[1][1];
+//		rowData[0][0] = 
+//		JTable firstTable = new JTable(null,tmpColumnName);
+//		
+//		
+//		String[] colomnName = ConfigClass.columnName.split(";");
+//		
+//
+//		DefaultTableModel tableModel = new DefaultTableModel(colomnName,
+//				colomnName.length);
+//		dataTable = new JTable(tableModel);
+////		DefaultTableCellRenderer render = new DefaultTableCellRenderer();
+////	       render.setHorizontalAlignment(SwingConstants.CENTER);
+////	       for(i = 0;i < colomnName.length;i++)
+////	       {
+////	    	   dataTable.getColumn(colomnName[i]).setCellRenderer(render);;
+////	       }
+//	       
+//	       
+//		dataTable.setRowHeight(ConfigClass.rowHeight);
+//		dataTable.setFont(new Font("Menu.Font",Font.PLAIN,ConfigClass.fontSize));
+//		dataTable.setBackground(new Color(ConfigClass.colorR,ConfigClass.colorG,ConfigClass.colorB));
+ 		Font font = new Font("Menu.Font",Font.PLAIN,ConfigClass.fontSize);
+ 		js = new JScrollPane(titleTable,
+				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		topPanel.add(js);
+		
+		titleTable.setRowHeight(200);
+//
+////		topPanel.setLayout(new BorderLayout());
+////		topPanel.add("North", titleButton);
+////		topPanel.add("Center", juniorPanel);
+//		topPanel.add(firstTable);
+//
+//		juniorPanel.add("North", factoryPanel);
+//		factoryPanel.add(factoryButton1);
+//		factoryPanel.add(factoryButton2);
+//		juniorPanel.add("Center", js);
+
+		repaint();
+		topPanel.repaint();
+		addWindowListener(new WndListener());
+	}
+
+	@Override
+	public void update(Subject sub) {
+		// TODO Auto-generated method stub
+		Excel excel = (Excel)sub;
+		int i, j, k, s;
+		int nextCol = 0;
+		int curCol = 0;
+		String cellString = null;
+		String excelRC[] = ConfigClass.excelRC.split(";");
+		int excelRow = Integer.parseInt(excelRC[0]);
+		int excelCol = Integer.parseInt(excelRC[1]);
+		
+		int readColNum = ConfigClass.readColNum;;
+		int readRowNum =  0;
+		int tableRow = 0;
+		int tableCol = 0;
+		
+		for(k = 0;k < excel.getFileNum();k++)
+		{
+			readRowNum = excel.getRowNum(k,0);
+			for(i = 0;i < readRowNum;i++)
+			{
+				for(j = 0;j < readColNum;j++)
+				{
+//					if (dataTable.getRowCount() <= i) {
+//						DefaultTableModel dm = (DefaultTableModel) dataTable
+//								.getModel();
+//						dm.addRow((Vector) null);
+//					}
+//					cellString = excel.getCellString(k, 0, excelRow + i, excelCol + j);
+//					dataTable.setValueAt(cellString,tableRow + i , tableCol + j );
+				}
+			}
+		
+			tableRow = 0;
+			tableCol += readColNum;
+		}
+	}
+}
